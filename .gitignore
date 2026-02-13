@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.dist/
+build/
+dist/
+
+# Virtualenv
+.venv/
+venv/
+
+# Env
+.env
+
+# OS
+.DS_Store
+
+# Outputs
+out/
+reports/
+*.csv
+*.xlsx
+*.json
+
+# Test / tooling
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
