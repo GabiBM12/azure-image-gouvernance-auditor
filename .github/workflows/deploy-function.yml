@@ -34,25 +34,31 @@ jobs:
 
       - name: Build deployment package
         run: |
-          set -euo pipefail
-          rm -rf ziproot app.zip
-          mkdir -p ziproot
+         set -euo pipefail
+         rm -f app.zip
+         rm -rf ziproot
+         mkdir -p ziproot
 
-          # Function host files at zip root
-          cp src/function_app/host.json ziproot/host.json
-          cp src/function_app/function_app.py ziproot/function_app.py
+         # Function files at zip root
+         cp src/function_app/host.json ziproot/host.json
+         cp src/function_app/function_app.py ziproot/function_app.py
 
-          # Azure expects requirements.txt
-          cp src/function_app/requirements.functions.txt ziproot/requirements.txt
+         # Azure expects requirements.txt at zip root
+         cp src/function_app/requirements.functions.txt ziproot/requirements.txt
 
-          # Your python package at zip root
-          cp -R src/azimg_auditor ziproot/azimg_auditor
+         # Copy your app package
+         cp -R src/azimg_auditor ziproot/azimg_auditor
 
-          # Remove caches/pyc if they exist
-          find ziproot -type d -name "__pycache__" -prune -exec rm -rf {} +
-          find ziproot -type f -name "*.pyc" -delete
+          # ✅ Install deps into .python_packages for Functions runtime
+          python -m pip install --upgrade pip
+           mkdir -p ziproot/.python_packages/lib/site-packages
+         python -m pip install -r ziproot/requirements.txt -t ziproot/.python_packages/lib/site-packages
 
-          (cd ziproot && zip -r ../app.zip .)
+         # (Optional) remove caches
+         find ziproot -type d -name "__pycache__" -prune -exec rm -rf {} +
+         find ziproot -type f -name "*.pyc" -delete
+
+         (cd ziproot && zip -r ../app.zip .)
 
       - name: Azure Login (OIDC)
         uses: azure/login@v2
