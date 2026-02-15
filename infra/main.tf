@@ -81,6 +81,7 @@ resource "azurerm_linux_function_app" "func" {
   app_settings = {
     # Functions runtime
     "FUNCTIONS_WORKER_RUNTIME" = "python"
+    "AzureWebJobsFeatureFlags" = "EnableWorkerIndexing"
 
     # App Insights
     "APPINSIGHTS_INSTRUMENTATIONKEY"        = azurerm_application_insights.ai.instrumentation_key
