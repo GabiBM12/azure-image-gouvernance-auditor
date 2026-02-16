@@ -4,3 +4,4 @@ azure-mgmt-resourcegraph>=8.0.0
 azure-mgmt-subscription>=3.1.1
 azure-storage-blob>=12.20.0
 cryptography==41.0.7
+pyyaml>=6.0.1
