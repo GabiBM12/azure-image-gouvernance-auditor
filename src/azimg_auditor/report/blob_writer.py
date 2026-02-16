@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import os
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from azure.identity import DefaultAzureCredential
-from azure.storage.blob import BlobServiceClient
+from azure.storage.blob import BlobServiceClient, ContentSettings
 
 
 def _blob_service_client() -> BlobServiceClient:
@@ -28,6 +28,8 @@ def upload_bytes_report(
 ) -> str:
     bsc = _blob_service_client()
     cc = bsc.get_container_client(container)
+
+    # Create container if missing (ignore if it already exists)
     try:
         cc.create_container()
     except Exception:
@@ -37,7 +39,12 @@ def upload_bytes_report(
     blob_name = f"{prefix.rstrip('/')}/{filename_prefix}_{ts}.csv"
 
     bc = cc.get_blob_client(blob_name)
-    bc.upload_blob(data, overwrite=True, content_settings={"content_type": content_type})
+
+    bc.upload_blob(
+        data,
+        overwrite=True,
+        content_settings=ContentSettings(content_type=content_type),  # ✅ FIX
+    )
     return blob_name
 
 
@@ -51,11 +58,7 @@ def upload_csv_report(
     import csv
     import io
 
-    if not rows:
-        # still upload header-only file
-        columns = []
-    else:
-        columns = list(rows[0].keys())
+    columns = list(rows[0].keys()) if rows else []
 
     buf = io.StringIO()
     writer = csv.DictWriter(buf, fieldnames=columns, extrasaction="ignore")
