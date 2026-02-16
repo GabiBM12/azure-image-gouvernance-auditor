@@ -1,0 +1,50 @@
+version: 1
+
+rules:
+  - id: IMG-001
+    title: "VM image publisher must be Microsoft-approved"
+    severity: high
+    description: "Flags VMs running images from non-approved publishers."
+    match:
+      field: publisher
+      op: not_in
+      values:
+        - MicrosoftWindowsServer
+        - Canonical
+        - RedHat
+        - OpenLogic
+
+  - id: IMG-002
+    title: "Ubuntu must be LTS"
+    severity: medium
+    description: "Flags Ubuntu images that are not LTS (example policy)."
+    when:
+      all:
+        - field: publisher
+          op: eq
+          value: Canonical
+        - field: offer
+          op: contains
+          value: Ubuntu
+    match:
+      field: sku
+      op: not_contains
+      value: LTS
+
+  - id: IMG-003
+    title: "Image version must not be 'latest'"
+    severity: low
+    description: "Encourage pinned image versions for repeatability."
+    match:
+      field: version
+      op: eq
+      value: latest
+
+  - id: IMG-004
+    title: "VM image older than 180 days"
+    severity: medium
+    description: "Flags images created more than 180 days ago."
+    match:
+      field: timeCreated
+      op: older_than_days
+      value: 180

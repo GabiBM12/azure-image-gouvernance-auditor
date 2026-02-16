@@ -25,40 +25,45 @@ jobs:
         with:
           python-version: "3.11"
 
-      # (Optional but nice) quick import sanity check before deploying
       - name: Sanity check imports
         run: |
+          set -euo pipefail
           python -m pip install -U pip
           pip install -r src/function_app/requirements.functions.txt
-          PYTHONPATH=src python -c "from azimg_auditor.pipeline.step1_inventory import run_inventory; print('imports ok')"
+          PYTHONPATH=src python -c "from azimg_auditor.governance.engine import evaluate_inventory; print('imports ok')"
 
       - name: Build deployment package
         run: |
-         set -euo pipefail
-         rm -f app.zip
-         rm -rf ziproot
-         mkdir -p ziproot
+          set -euo pipefail
 
-         # Function files at zip root
-         cp src/function_app/host.json ziproot/host.json
-         cp src/function_app/function_app.py ziproot/function_app.py
+          rm -f app.zip
+          rm -rf ziproot
+          mkdir -p ziproot
 
-         # Azure expects requirements.txt at zip root
-         cp src/function_app/requirements.functions.txt ziproot/requirements.txt
+          # Function host files at zip root
+          cp src/function_app/host.json ziproot/host.json
+          cp src/function_app/function_app.py ziproot/function_app.py
 
-         # Copy your app package
-         cp -R src/azimg_auditor ziproot/azimg_auditor
+          # Azure Functions expects requirements.txt at zip root
+          cp src/function_app/requirements.functions.txt ziproot/requirements.txt
 
-          # ✅ Install deps into .python_packages for Functions runtime
+          # Copy your Python package
+          cp -R src/azimg_auditor ziproot/azimg_auditor
+
+          # Ensure rules.yaml is included (defensive - in case folder is missing)
+          test -f ziproot/azimg_auditor/governance/rules.yaml
+
+          # Install deps into .python_packages for Functions runtime
           python -m pip install --upgrade pip
-           mkdir -p ziproot/.python_packages/lib/site-packages
-         python -m pip install -r ziproot/requirements.txt -t ziproot/.python_packages/lib/site-packages
+          mkdir -p ziproot/.python_packages/lib/site-packages
+          python -m pip install -r ziproot/requirements.txt -t ziproot/.python_packages/lib/site-packages
 
-         # (Optional) remove caches
-         find ziproot -type d -name "__pycache__" -prune -exec rm -rf {} +
-         find ziproot -type f -name "*.pyc" -delete
+          # Optional cleanup
+          find ziproot -type d -name "__pycache__" -prune -exec rm -rf {} +
+          find ziproot -type f -name "*.pyc" -delete
 
-         (cd ziproot && zip -r ../app.zip .)
+          # Build zip
+          (cd ziproot && zip -r ../app.zip .)
 
       - name: Azure Login (OIDC)
         uses: azure/login@v2
