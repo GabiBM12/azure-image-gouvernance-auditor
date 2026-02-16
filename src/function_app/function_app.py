@@ -12,7 +12,7 @@ app = func.FunctionApp()
 SCHEDULE = os.getenv("AZIMG_TIMER_SCHEDULE", "0 0 7 * * *")
 
 
-@app.timer_trigger(schedule=SCHEDULE, arg_name="mytimer", run_on_startup=False, use_monitor=True)
+@app.timer_trigger(schedule=SCHEDULE, arg_name="mytimer", run_on_startup=True, use_monitor=True)
 def azimg_timer(mytimer: func.TimerRequest) -> None:
     start = time.time()
 
